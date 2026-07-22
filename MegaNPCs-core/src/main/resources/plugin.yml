@@ -1,0 +1,4 @@
+name: MegaNPCs-core
+version: '1.0-SNAPSHOT'
+main: com.steve.megaNPCsCore.MegaNPCsCore
+api-version: '1.21'

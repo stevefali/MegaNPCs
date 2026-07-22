@@ -1,0 +1,3 @@
+rootProject.name = 'MegaNPCs'
+include 'MegaNPCs-api'
+include 'MegaNPCs-core'
