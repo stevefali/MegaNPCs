@@ -1,4 +1,4 @@
-package com.steve.megaNPCsCore;
+package com.steve.megaNPCs.core;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
