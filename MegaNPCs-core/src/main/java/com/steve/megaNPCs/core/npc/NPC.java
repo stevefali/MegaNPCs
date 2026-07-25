@@ -1,21 +1,36 @@
 package com.steve.megaNPCs.core.npc;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.datafixers.util.Pair;
 import com.steve.MegaNPCs.api.NpcInteractionEvent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class NPC extends ServerPlayer {
 
     private Consumer<Player> onInteract;
     private final String npcName;
+    private final List<Pair<EquipmentSlot, ItemStack>> equipmentList = new ArrayList<>(List.of(
+            new Pair<>(EquipmentSlot.MAINHAND, ItemStack.EMPTY),
+            new Pair<>(EquipmentSlot.OFFHAND, ItemStack.EMPTY),
+            new Pair<>(EquipmentSlot.FEET, ItemStack.EMPTY),
+            new Pair<>(EquipmentSlot.LEGS, ItemStack.EMPTY),
+            new Pair<>(EquipmentSlot.CHEST, ItemStack.EMPTY),
+            new Pair<>(EquipmentSlot.HEAD, ItemStack.EMPTY),
+            new Pair<>(EquipmentSlot.BODY, ItemStack.EMPTY)
+    ));
 
     public NPC(
             MinecraftServer server,
@@ -46,5 +61,16 @@ public class NPC extends ServerPlayer {
 
     public String getNpcName() {
         return this.npcName;
+    }
+
+    public List<Pair<EquipmentSlot, ItemStack>> getEquipmentList() {
+        return this.equipmentList;
+    }
+
+    public void equipItem(EquipmentSlot equipmentSlot, ItemStack itemStack) {
+        Optional<Pair<EquipmentSlot, ItemStack>> existingItemPair =
+                equipmentList.stream().filter(itemPair -> itemPair.getFirst().equals(equipmentSlot)).findAny();
+        existingItemPair.ifPresent(equipmentList::remove);
+        equipmentList.add(Pair.of(equipmentSlot, itemStack));
     }
 }

@@ -1,9 +1,8 @@
 package com.steve.megaNPCs.core.npc;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import net.minecraft.world.entity.Entity;
+
+import java.util.*;
 
 public class NpcManager {
 
@@ -51,6 +50,10 @@ public class NpcManager {
             unregisterNpc(i);
         }
         return !npcIdsByWorld.containsKey(worldName);
+    }
+
+    public static List<UUID> getAllUuids() {
+        return npcsById.values().stream().map(Entity::getUUID).toList();
     }
 
 }

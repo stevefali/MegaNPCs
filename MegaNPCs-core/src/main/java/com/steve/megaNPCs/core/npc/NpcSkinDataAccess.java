@@ -21,7 +21,7 @@ public class NpcSkinDataAccess {
     public static CompletableFuture<Map<String, NpcSkin>> load(Plugin plugin) {
         CompletableFuture<Map<String, NpcSkin>> future = new CompletableFuture<>();
 
-        if (NPC_SKINS != null) {
+        if (NPC_SKINS != null && !NPC_SKINS.isEmpty()) {
             future.complete(NPC_SKINS);
             return future;
         }
