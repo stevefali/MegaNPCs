@@ -2,7 +2,11 @@ package com.steve.megaNPCs.core;
 
 import com.steve.MegaNPCs.api.NpcService;
 import com.steve.megaNPCs.core.implementation.NpcServiceImpl;
+import com.steve.megaNPCs.core.network.PacketListenerInjector;
+import com.steve.megaNPCs.core.npc.NpcManager;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,11 +20,31 @@ public final class MegaNPCsCore extends JavaPlugin {
                 NpcService.class, serviceImpl, this, ServicePriority.Normal
         );
 
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PacketListenerInjector.inject(player, this);
+        }
+
     }
 
     @Override
     public void onDisable() {
 
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PacketListenerInjector.eject(player);
+        }
+        HandlerList.unregisterAll();
+
+        NpcManager.unregisterAllNpcs();
+
+        try {
+
+        } catch (Exception e) {
+            System.out.println("Error removing NPCs: " + e.getMessage());
+        }
+
         Bukkit.getServicesManager().unregisterAll(this);
+
+
     }
 }

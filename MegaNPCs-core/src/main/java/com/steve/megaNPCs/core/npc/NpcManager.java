@@ -1,6 +1,11 @@
 package com.steve.megaNPCs.core.npc;
 
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.Entity;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -20,13 +25,30 @@ public class NpcManager {
     }
 
     public static void unregisterNpc(int id) {
-        npcsByName.remove(npcsById.get(id).getNpcName());
-        String worldName = npcsById.get(id).serverLevel().getWorld().getName();
-        npcIdsByWorld.get(worldName).remove(Integer.valueOf(id));
-        if (npcIdsByWorld.get(worldName).isEmpty()) {
-            npcIdsByWorld.remove(worldName);
+        NPC npc = npcsById.remove(id);
+        if (npc == null) {
+            return;
         }
-        npcsById.remove(id);
+
+        for (UUID uuid : npc.shownToPlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
+                connection.send(new ClientboundRemoveEntitiesPacket(id));
+            }
+        }
+
+        npcsByName.remove(npc.getNpcName());
+
+        String worldName = npc.serverLevel().getWorld().getName();
+        var worldNpcIds = npcIdsByWorld.get(worldName);
+        if (worldNpcIds != null) {
+            worldNpcIds.remove(Integer.valueOf(id));
+            if (npcIdsByWorld.get(worldName).isEmpty()) {
+                npcIdsByWorld.remove(worldName);
+            }
+        }
+        npc.cleanup();
     }
 
     public static NPC getById(int id) {
@@ -54,6 +76,23 @@ public class NpcManager {
 
     public static List<UUID> getAllUuids() {
         return npcsById.values().stream().map(Entity::getUUID).toList();
+    }
+
+    public static void unregisterAllNpcs() {
+        List<NPC> allNpcs = new ArrayList<>(npcsById.values());
+
+        for (NPC npc : allNpcs) {
+            unregisterNpc(npc.getId());
+        }
+        allNpcs.clear();
+    }
+
+    public static void removePlayerFromAllNpcShownTo(UUID playerUuid) {
+        for (NPC npc : npcsById.values()) {
+            if (npc != null) {
+                npc.shownToPlayers.remove(playerUuid);
+            }
+        }
     }
 
 }

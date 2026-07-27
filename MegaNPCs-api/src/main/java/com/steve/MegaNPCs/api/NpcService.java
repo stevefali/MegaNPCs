@@ -24,8 +24,17 @@ public interface NpcService {
     int createNpc(Location location, String displayName, @Nullable String skinName, @Nullable Consumer<Player> onInteract);
 
     /**
-     * Set the head and body rotation of the NPC.
-     *  **Note: If the NPC has already been shown to players, you will have to call {@link #showNpcTo(int, Player)} again.**
+     * Set/update the position of the NPC in the world
+     *
+     * @param npcId    The id of the NPC.
+     * @param x        The X-position of the NPC
+     * @param y        The Y-position of the NPC
+     * @param z        The Z-position of the NPC
+    */
+    void setNpcPosition(int npcId, double x, double y, double z);
+
+    /**
+     * Set/update the head and body rotation of the NPC.
      *
      * @param npcId    The id of the NPC.
      * @param xRot     The vertical rotation of the NPC's head.
@@ -36,7 +45,7 @@ public interface NpcService {
 
     /**
      * Set the equipment slots (armor, items in hand, etc.) of the NPC.
-     *  **Note: If the NPC has already been shown to players, you will have to call {@link #showNpcTo(int, Player)} again.**
+     *
      * @param npcId         The id of the NPC.
      * @param equipmentSlot Where on the NPC to equip the item.
      * @param item          The item to equip.
@@ -45,7 +54,7 @@ public interface NpcService {
 
     /**
      * Remove an equipped item (armor, items in hand, etc.) from the NPC
-     *  **Note: If the NPC has already been shown to players, you will have to call {@link #showNpcTo(int, Player)} again.**
+     *
      * @param npcId         The id of the NPC.
      * @param equipmentSlot Where on the NPC to remove the item.
      */
@@ -58,6 +67,14 @@ public interface NpcService {
      * @param viewer The player the NPC will be shown to.
     */
     void showNpcTo(int npcId, Player viewer);
+
+    /**
+     * Make NPCs disappear for a player. **Note that this does not remove the NPCs from the {@code NpcManager}.**
+     *
+     * @param viewer The player for whom the NPCs will disappear.
+     * @param npcIds  The IDs of the NPCs.
+     */
+    void unShowNpcsTo(Player viewer, int... npcIds);
 
     /**
      * Get the ID of the NPC with the provided name.
@@ -109,5 +126,10 @@ public interface NpcService {
      * Example format of callback method: {@code player -> { player.sendMessage("Hey there!") }}
      */
     void setNpcInteraction(int npcId, Consumer<Player> onInteract);
+
+    /**
+     * Remove all registered NPC's. They will also be un-shown to any online players.
+     */
+    void removeAllNpcs();
 
 }

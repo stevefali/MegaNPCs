@@ -16,21 +16,15 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class NPC extends ServerPlayer {
 
     private Consumer<Player> onInteract;
     private final String npcName;
-    private final List<Pair<EquipmentSlot, ItemStack>> equipmentList = new ArrayList<>(List.of(
-            new Pair<>(EquipmentSlot.MAINHAND, ItemStack.EMPTY),
-            new Pair<>(EquipmentSlot.OFFHAND, ItemStack.EMPTY),
-            new Pair<>(EquipmentSlot.FEET, ItemStack.EMPTY),
-            new Pair<>(EquipmentSlot.LEGS, ItemStack.EMPTY),
-            new Pair<>(EquipmentSlot.CHEST, ItemStack.EMPTY),
-            new Pair<>(EquipmentSlot.HEAD, ItemStack.EMPTY),
-            new Pair<>(EquipmentSlot.BODY, ItemStack.EMPTY)
-    ));
+    private final List<Pair<EquipmentSlot, ItemStack>> equipmentList = new ArrayList<>();
+    public final List<UUID> shownToPlayers = new ArrayList<>();
 
     public NPC(
             MinecraftServer server,
@@ -72,5 +66,11 @@ public class NPC extends ServerPlayer {
                 equipmentList.stream().filter(itemPair -> itemPair.getFirst().equals(equipmentSlot)).findAny();
         existingItemPair.ifPresent(equipmentList::remove);
         equipmentList.add(Pair.of(equipmentSlot, itemStack));
+    }
+
+    public void cleanup() {
+        this.onInteract = null;
+        this.equipmentList.clear();
+        shownToPlayers.clear();
     }
 }
