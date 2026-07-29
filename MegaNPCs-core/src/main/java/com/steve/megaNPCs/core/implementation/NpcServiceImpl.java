@@ -34,8 +34,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import sun.misc.Unsafe;
 
+import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class NpcServiceImpl implements NpcService {
@@ -100,10 +102,15 @@ public class NpcServiceImpl implements NpcService {
             System.err.println("Error setting NPC position: NPC is null");
             return;
         }
-
         npc.setPos(x, y, z);
 
-        sendLocationRotationUpdate(npc);
+        for (UUID uuid : npc.shownToPlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+
+                showTo(npc, player);
+            }
+        }
     }
 
     @Override
@@ -113,12 +120,19 @@ public class NpcServiceImpl implements NpcService {
             System.err.println("Error setting NPC rotation: NPC is null");
             return;
         }
-
         npc.setXRot(xRot);
         npc.setYRot(yRot);
-        npc.setYHeadRot(yHeadRot);
+        npc.setYHeadRot(yRot);
 
-        sendLocationRotationUpdate(npc);
+        npc.trueHeadYRot = yHeadRot;
+
+        for (UUID uuid : npc.shownToPlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+
+                showTo(npc, player);
+            }
+        }
     }
 
     @Override
@@ -160,57 +174,7 @@ public class NpcServiceImpl implements NpcService {
             System.err.println("Error sending packets to show NPC: viewing player is null");
             return;
         }
-        try {
-            List<SynchedEntityData.DataValue<?>> dataValuesCopy = new ArrayList<>(npc.getEntityData().getNonDefaultValues());
-            SynchedEntityData.DataValue<Byte> outerSkinLayersValue =
-                    new SynchedEntityData.DataValue<>(17, EntityDataSerializers.BYTE, (byte) 0x7F);
-            dataValuesCopy.add(outerSkinLayersValue);
-
-            EnumSet<ClientboundPlayerInfoUpdatePacket.Action> actions = EnumSet.of(
-                    ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER,
-                    ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED,
-                    ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY
-            );
-
-            ClientboundPlayerInfoUpdatePacket.Entry entry = new ClientboundPlayerInfoUpdatePacket.Entry(
-                    npc.getUUID(),
-                    npc.getGameProfile(),
-                    true,
-                    0,
-                    GameType.SURVIVAL,
-                    null,
-                    true,
-                    0,
-                    null
-            );
-
-            ServerPlayer serverPlayer = ((CraftPlayer) viewer).getHandle();
-            ServerGamePacketListenerImpl connection = serverPlayer.connection;
-
-            ClientboundPlayerInfoUpdatePacket infoUpdatePacket = makePlayerInfoUpdatePacket(actions, List.of(entry));
-
-            connection.send(infoUpdatePacket);
-            connection.send(new ClientboundAddEntityPacket(npc, 0, npc.blockPosition()));
-            connection.send(new ClientboundSetEntityDataPacket(npcId, dataValuesCopy));
-
-
-            if (!npc.getEquipmentList().isEmpty()) {
-                connection.send(new ClientboundSetEquipmentPacket(npcId, npc.getEquipmentList()));
-            }
-
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                connection.send(new ClientboundPlayerInfoRemovePacket(Collections.singletonList(npc.getUUID())));
-            }, 20L);
-
-            if (!npc.shownToPlayers.contains(viewer.getUniqueId())) {
-                npc.shownToPlayers.add(viewer.getUniqueId());
-            }
-
-            sendLocationRotationUpdate(npc, serverPlayer);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        showTo(npc, viewer);
     }
 
     @Override
@@ -336,22 +300,56 @@ public class NpcServiceImpl implements NpcService {
         }
     }
 
-    private static void sendLocationRotationUpdate(NPC npc) {
+    private void showTo(NPC npc, Player viewer) {
         try {
-            for (UUID uuid : npc.shownToPlayers) {
-                Player player = Bukkit.getPlayer(uuid);
-                if (player != null) {
-                    ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
-                    PositionMoveRotation positionMoveRotation = new PositionMoveRotation(npc.position(), Vec3.ZERO, npc.getYRot(), npc.getXRot());
-                    ClientboundTeleportEntityPacket teleportPack = new ClientboundTeleportEntityPacket(
-                            npc.getId(),
-                            positionMoveRotation,
-                            Collections.emptySet(),
-                            true
-                    );
-                    connection.send(teleportPack);
-                }
+            List<SynchedEntityData.DataValue<?>> dataValuesCopy = new ArrayList<>(npc.getEntityData().getNonDefaultValues());
+            SynchedEntityData.DataValue<Byte> outerSkinLayersValue =
+                    new SynchedEntityData.DataValue<>(17, EntityDataSerializers.BYTE, (byte) 0x7F);
+            dataValuesCopy.add(outerSkinLayersValue);
+
+            EnumSet<ClientboundPlayerInfoUpdatePacket.Action> actions = EnumSet.of(
+                    ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER,
+                    ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED,
+                    ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY
+            );
+
+            ClientboundPlayerInfoUpdatePacket.Entry entry = new ClientboundPlayerInfoUpdatePacket.Entry(
+                    npc.getUUID(),
+                    npc.getGameProfile(),
+                    true,
+                    0,
+                    GameType.SURVIVAL,
+                    null,
+                    true,
+                    0,
+                    null
+            );
+
+            ServerPlayer serverPlayer = ((CraftPlayer) viewer).getHandle();
+            ServerGamePacketListenerImpl connection = serverPlayer.connection;
+
+            ClientboundPlayerInfoUpdatePacket infoUpdatePacket = makePlayerInfoUpdatePacket(actions, List.of(entry));
+
+            connection.send(infoUpdatePacket);
+            connection.send(new ClientboundAddEntityPacket(npc, 0, npc.blockPosition()));
+            connection.send(new ClientboundSetEntityDataPacket(npc.getId(), dataValuesCopy));
+
+
+            if (!npc.getEquipmentList().isEmpty()) {
+                connection.send(new ClientboundSetEquipmentPacket(npc.getId(), npc.getEquipmentList()));
             }
+
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                connection.send(new ClientboundPlayerInfoRemovePacket(Collections.singletonList(npc.getUUID())));
+            }, 20L);
+
+            byte yHeadRot = (byte) ((npc.trueHeadYRot * 256.0F) / 360.0F);
+            connection.send(new ClientboundRotateHeadPacket(npc, yHeadRot));
+
+            if (!npc.shownToPlayers.contains(viewer.getUniqueId())) {
+                npc.shownToPlayers.add(viewer.getUniqueId());
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -368,4 +366,5 @@ public class NpcServiceImpl implements NpcService {
         );
         connection.send(teleportPack);
     }
+
 }

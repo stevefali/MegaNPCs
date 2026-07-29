@@ -25,6 +25,7 @@ public class NPC extends ServerPlayer {
     private final String npcName;
     private final List<Pair<EquipmentSlot, ItemStack>> equipmentList = new ArrayList<>();
     public final List<UUID> shownToPlayers = new ArrayList<>();
+    public float trueHeadYRot = 0;
 
     public NPC(
             MinecraftServer server,

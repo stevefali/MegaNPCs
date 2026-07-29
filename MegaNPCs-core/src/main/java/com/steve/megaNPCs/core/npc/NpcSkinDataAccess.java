@@ -1,10 +1,9 @@
 package com.steve.megaNPCs.core.npc;
 
 import com.google.gson.Gson;
-import io.leangen.geantyref.TypeToken;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-
+import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
