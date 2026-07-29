@@ -3,12 +3,15 @@ package com.steve.megaNPCs.core.npc;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
 import com.steve.MegaNPCs.api.NpcInteractionEvent;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -73,5 +76,20 @@ public class NPC extends ServerPlayer {
         this.onInteract = null;
         this.equipmentList.clear();
         shownToPlayers.clear();
+    }
+
+    @Override
+    public void lookAt(EntityAnchorArgument.Anchor anchor, Vec3 target) {
+        Vec3 vec3 = anchor.apply(this);
+        double d = target.x - vec3.x;
+        double d1 = target.y - vec3.y;
+        double d2 = target.z - vec3.z;
+        double squareRoot = Math.sqrt(d * d + d2 * d2);
+        this.setXRot(Mth.wrapDegrees((float)(-(Mth.atan2(d1, squareRoot) * (double)180.0F / (double)(float)Math.PI))));
+        this.setYRot(Mth.wrapDegrees((float)(Mth.atan2(d2, d) * (double)180.0F / (double)(float)Math.PI) - 90.0F));
+        this.trueHeadYRot = this.getYRot();
+        this.setYHeadRot(trueHeadYRot);
+        this.xRotO = this.getXRot();
+        this.yRotO = this.getYRot();
     }
 }

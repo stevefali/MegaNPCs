@@ -26,11 +26,11 @@ public interface NpcService {
     /**
      * Set/update the position of the NPC in the world
      *
-     * @param npcId    The id of the NPC.
-     * @param x        The X-position of the NPC
-     * @param y        The Y-position of the NPC
-     * @param z        The Z-position of the NPC
-    */
+     * @param npcId The id of the NPC.
+     * @param x     The X-position of the NPC
+     * @param y     The Y-position of the NPC
+     * @param z     The Z-position of the NPC
+     */
     void setNpcPosition(int npcId, double x, double y, double z);
 
     /**
@@ -42,6 +42,16 @@ public interface NpcService {
      * @param yHeadRot The horizontal rotation of the NPC's head.
      */
     void setNpcRotation(int npcId, float xRot, float yRot, float yHeadRot);
+
+    /**
+     * Set the NPC to look at the given location.
+     * **Note: The NPC will look at where the eyes of a player would be
+     * if they were standing at the given location.
+     *
+     * @param npcId          The id of the NPC.
+     * @param playerLocation The location where the NPC will look (as if there were a player standing there)
+     */
+    void npcLookAt(int npcId, Location playerLocation);
 
     /**
      * Set the equipment slots (armor, items in hand, etc.) of the NPC.
@@ -65,14 +75,14 @@ public interface NpcService {
      *
      * @param npcId  The id of the NPC.
      * @param viewer The player the NPC will be shown to.
-    */
+     */
     void showNpcTo(int npcId, Player viewer);
 
     /**
      * Make NPCs disappear for a player. **Note that this does not remove the NPCs from the {@code NpcManager}.**
      *
      * @param viewer The player for whom the NPCs will disappear.
-     * @param npcIds  The IDs of the NPCs.
+     * @param npcIds The IDs of the NPCs.
      */
     void unShowNpcsTo(Player viewer, int... npcIds);
 
@@ -103,7 +113,7 @@ public interface NpcService {
     /**
      * Remove the NPC and no longer show it to any players.
      *
-     * @param npcId  The id of the NPC.
+     * @param npcId The id of the NPC.
      * @return {@code true} if the NPC was successfully removed, {@code false} if the NPC was not successfully removed.
      */
     boolean removeNpc(int npcId);
@@ -118,12 +128,12 @@ public interface NpcService {
 
     /**
      * Set the callback method that will run when a player interacts with the NPC.
-     *  **Note: Interacting with the NPC also fires an {@link com.steve.MegaNPCs.api.NpcInteractionEvent} event. If that event is cancelled, the callback method will NOT run.**
+     * **Note: Interacting with the NPC also fires an {@link com.steve.MegaNPCs.api.NpcInteractionEvent} event. If that event is cancelled, the callback method will NOT run.**
      *
-     * @param npcId The id of the NPC
+     * @param npcId      The id of the NPC
      * @param onInteract The callback method for the interaction.
-     *
-     * Example format of callback method: {@code player -> { player.sendMessage("Hey there!") }}
+     *                   <p>
+     *                   Example format of callback method: {@code player -> { player.sendMessage("Hey there!") }}
      */
     void setNpcInteraction(int npcId, Consumer<Player> onInteract);
 

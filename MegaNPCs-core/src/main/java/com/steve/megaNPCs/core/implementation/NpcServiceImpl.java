@@ -7,6 +7,7 @@ import com.steve.megaNPCs.core.npc.NPC;
 import com.steve.megaNPCs.core.npc.NpcManager;
 import com.steve.megaNPCs.core.npc.NpcSkin;
 import com.steve.megaNPCs.core.npc.NpcSkinDataAccess;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -129,8 +130,24 @@ public class NpcServiceImpl implements NpcService {
         for (UUID uuid : npc.shownToPlayers) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
+                sendRotationUpdate(npc, ((CraftPlayer) player).getHandle());
+            }
+        }
+    }
 
-                showTo(npc, player);
+    @Override
+    public void npcLookAt(int npcId, Location location) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error setting NPC rotation: NPC is null");
+            return;
+        }
+        Vec3 vec3 = new Vec3(location.getX(), location.getY(), location.getZ());
+        for (UUID uuid : npc.shownToPlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                npc.lookAt(EntityAnchorArgument.Anchor.FEET, vec3);
+                sendRotationUpdate(npc, ((CraftPlayer) player).getHandle());
             }
         }
     }
@@ -343,8 +360,11 @@ public class NpcServiceImpl implements NpcService {
                 connection.send(new ClientboundPlayerInfoRemovePacket(Collections.singletonList(npc.getUUID())));
             }, 20L);
 
-            byte yHeadRot = (byte) ((npc.trueHeadYRot * 256.0F) / 360.0F);
-            connection.send(new ClientboundRotateHeadPacket(npc, yHeadRot));
+            if (!isOnBlockOrigin(npc.getX(), npc.getY())) {
+                teleportNPC(npc, serverPlayer);
+            }
+
+            sendRotationUpdate(npc, serverPlayer);
 
             if (!npc.shownToPlayers.contains(viewer.getUniqueId())) {
                 npc.shownToPlayers.add(viewer.getUniqueId());
@@ -355,7 +375,7 @@ public class NpcServiceImpl implements NpcService {
         }
     }
 
-    private static void sendLocationRotationUpdate(NPC npc, @NotNull ServerPlayer serverPlayer) {
+    private static void teleportNPC(NPC npc, @NotNull ServerPlayer serverPlayer) {
         ServerGamePacketListenerImpl connection = serverPlayer.connection;
         PositionMoveRotation positionMoveRotation = new PositionMoveRotation(npc.position(), Vec3.ZERO, npc.getYRot(), npc.getXRot());
         ClientboundTeleportEntityPacket teleportPack = new ClientboundTeleportEntityPacket(
@@ -365,6 +385,21 @@ public class NpcServiceImpl implements NpcService {
                 true
         );
         connection.send(teleportPack);
+    }
+
+    private void sendRotationUpdate(NPC npc, ServerPlayer serverPlayer) {
+        ServerGamePacketListenerImpl connection = serverPlayer.connection;
+
+        byte yRot = (byte) ((npc.getYRot() * 256.0F) / 360.0F);
+        byte xRot = (byte) ((npc.getXRot() * 256.0F) / 360.0F);
+        byte headYRot = (byte) ((npc.trueHeadYRot * 256.0F) / 360.0F);
+
+        connection.send(new ClientboundMoveEntityPacket.Rot(npc.getId(), yRot, xRot, true));
+        connection.send(new ClientboundRotateHeadPacket(npc, headYRot));
+    }
+
+    private boolean isOnBlockOrigin(double x, double y) {
+        return (x % 1 == 0 && y % 1 == 0);
     }
 
 }
