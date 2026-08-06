@@ -108,8 +108,9 @@ public class NPC extends ServerPlayer {
     }
 
     public String[] getCurrentNameLinesText() {
-        return (String[]) nameLineArmorStands.stream().map(stand ->
-                stand.getCustomName().getString()).toArray();
+        return nameLineArmorStands.stream().map(stand ->
+                stand.getCustomName().getString()).toArray(String[]::new);
+
     }
 
     public void updateNameLineArmorStandsLocation() {
