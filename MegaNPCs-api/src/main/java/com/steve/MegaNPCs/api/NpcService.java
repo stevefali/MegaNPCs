@@ -142,4 +142,35 @@ public interface NpcService {
      */
     void removeAllNpcs();
 
+    /**
+     * Set whether to show the NPC's default name
+     *
+     * @param npcId      The id of the NPC
+     * @param isVisible  {@code true} to show the name; {@code false} to hide the name.
+     */
+    void setDefaultNameVisible(int npcId, boolean isVisible);
+
+    /**
+     * Set the lines of text displayed above the NPC.
+     *
+     * @param npcId      The id of the NPC
+     * @param nameLines  One or more strings to display above the NPC (from lowest to highest)
+     */
+    void setNameLines(int npcId, String... nameLines);
+
+    /**
+     * Remove the lines of text displayed above the NPC.
+     *
+     * @param npcId      The id of the NPC
+     */
+    void removeNameLines(int npcId);
+
+    /**
+     * Get the lines of text displayed above the NPC.
+     *
+     * @param npcId      The id of the NPC
+     * @return An array of the current name line strings
+     */
+    String[] getCurrentNameLines(int npcId);
+
 }

@@ -8,6 +8,7 @@ import com.steve.megaNPCs.core.npc.NpcManager;
 import com.steve.megaNPCs.core.npc.NpcSkin;
 import com.steve.megaNPCs.core.npc.NpcSkinDataAccess;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -16,21 +17,28 @@ import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import sun.misc.Unsafe;
@@ -45,6 +53,7 @@ public class NpcServiceImpl implements NpcService {
 
     private Plugin plugin;
     private static final String TEXTURES_PROPERTY = "textures";
+    private static final String TEAM_PREFIX = "npc_";
 
     private static final NpcSkin DEFAULT_SKIN = new NpcSkin(
             "ewogICJ0aW1lc3RhbXAiIDogMTc4NDI2OTI2NTE1NywKICAicHJvZmlsZUlkIiA6ICIzOGU1NmZlZjg4NjQ0NzBkYWZhNDM1OTExOTk3M2UyYSIsCiAgInByb2ZpbGVOYW1lIiA6ICJzdGV2ZWZhbCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8xYTRhZjcxODQ1NWQ0YWFiNTI4ZTdhNjFmODZmYTI1ZTZhMzY5ZDE3NjhkY2IxM2Y3ZGYzMTlhNzEzZWI4MTBiIgogICAgfQogIH0KfQ==",
@@ -90,7 +99,6 @@ public class NpcServiceImpl implements NpcService {
                         ));
                     });
         }
-
         NpcManager.registerNpc(npc);
 
         return npc.getId();
@@ -297,6 +305,66 @@ public class NpcServiceImpl implements NpcService {
         return packet;
     }
 
+    @Override
+    public void setDefaultNameVisible(int npcId, boolean isVisible) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error setting customName visibility: NPC is null");
+            return;
+        }
+
+        Team team = getNpcTeam(npc);
+        if (isVisible) {
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+        } else {
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        }
+    }
+
+    @Override
+    public void setNameLines(int npcId, String... nameLines) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error setting NPC name lines: NPC is null");
+            return;
+        }
+        npc.removeNameLineArmorStands();
+        setDefaultNameVisible(npcId, false);
+        World world = npc.getBukkitEntity().getWorld();
+        Location location = new Location(world, npc.getX(), npc.getY() - 0.2, npc.getZ());
+        for (int i = 0; i < nameLines.length; i++) {
+            Entity stand = ((CraftEntity) world.spawnEntity(
+                    new Location(world, location.getX(), location.getY() + (i * 0.3), location.getZ()),
+                    EntityType.ARMOR_STAND)
+            ).getHandle();
+            npc.addNameLineArmorStand((ArmorStand) stand);
+            stand.setNoGravity(true);
+            stand.setInvisible(true);
+            stand.setCustomName(Component.literal(nameLines[i]));
+            stand.setCustomNameVisible(true);
+        }
+    }
+
+    @Override
+    public void removeNameLines(int npcId) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error removing lines: NPC is null");
+            return;
+        }
+        npc.removeNameLineArmorStands();
+    }
+
+    @Override
+    public String[] getCurrentNameLines(int npcId) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error getting name lines: NPC is null");
+            return null;
+        }
+        return npc.getCurrentNameLinesText();
+    }
+
     private static Unsafe getUnsafe() throws Exception {
         Field field = Unsafe.class.getDeclaredField("theUnsafe");
         field.setAccessible(true);
@@ -360,6 +428,8 @@ public class NpcServiceImpl implements NpcService {
                 connection.send(new ClientboundPlayerInfoRemovePacket(Collections.singletonList(npc.getUUID())));
             }, 20L);
 
+            npc.updateNameLineArmorStandsLocation();
+
             if (!isOnBlockOrigin(npc.getX(), npc.getY())) {
                 teleportNPC(npc, serverPlayer);
             }
@@ -402,4 +472,13 @@ public class NpcServiceImpl implements NpcService {
         return (x % 1 == 0 && y % 1 == 0);
     }
 
+    private Team getNpcTeam(NPC npc) {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = scoreboard.getTeam(TEAM_PREFIX + npc.getId());
+        if (team == null) {
+            team = scoreboard.registerNewTeam(TEAM_PREFIX + npc.getId());
+        }
+        team.addEntry(npc.getGameProfile().getName());
+        return team;
+    }
 }
