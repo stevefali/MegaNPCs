@@ -120,6 +120,7 @@ public class NpcServiceImpl implements NpcService {
                 showTo(npc, player);
             }
         }
+        npc.updateTitleLocation();
     }
 
     @Override
@@ -363,6 +364,26 @@ public class NpcServiceImpl implements NpcService {
             return null;
         }
         return npc.getCurrentNameLinesText();
+    }
+
+    @Override
+    public void setTitle(int npcId, String titleText, double scale) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error setting title: NPC is null");
+            return;
+        }
+        npc.setTitle(titleText, scale);
+    }
+
+    @Override
+    public void removeTitle(int npcId) {
+        NPC npc = NpcManager.getById(npcId);
+        if (npc == null) {
+            System.err.println("Error removing title: NPC is null");
+            return;
+        }
+        npc.removeTitle();
     }
 
     private static Unsafe getUnsafe() throws Exception {

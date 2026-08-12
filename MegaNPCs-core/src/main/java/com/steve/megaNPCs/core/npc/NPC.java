@@ -9,12 +9,19 @@ import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.entity.CraftTextDisplay;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.util.Transformation;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -28,6 +35,7 @@ public class NPC extends ServerPlayer {
     public final List<UUID> shownToPlayers = new ArrayList<>();
     public float trueHeadYRot = 0;
     private final List<ArmorStand> nameLineArmorStands = new ArrayList<>();
+    private Display.TextDisplay title;
 
     public NPC(
             MinecraftServer server,
@@ -77,6 +85,7 @@ public class NPC extends ServerPlayer {
         this.equipmentList.clear();
         this.shownToPlayers.clear();
         this.removeNameLineArmorStands();
+        this.removeTitle();
     }
 
     @Override
@@ -121,6 +130,49 @@ public class NPC extends ServerPlayer {
                     npcPos.y() + (i * 0.3),
                     npcPos.z()
             );
+        }
+    }
+
+    public void updateTitleLocation() {
+        if (this.title == null) {
+            return;
+        }
+        Vec3 pos = new Vec3(
+                this.getX(),
+                this.getY() - 0.2 + 2 + ((nameLineArmorStands.size() + 1) * 0.3),
+                this.getZ());
+        this.title.setPos(pos);
+    }
+
+    public void setTitle(String titleText, double scale) {
+        if (this.title != null) {
+            this.title.remove(RemovalReason.DISCARDED);
+            this.title = null;
+        }
+        World world = this.getBukkitEntity().getWorld();
+        TextDisplay textDisplay = (TextDisplay) world.spawnEntity(
+                new Location(
+                        world,
+                        this.getX(),
+                        this.getY() - 0.2 + 2 + ((nameLineArmorStands.size() + 1) * 0.3),
+                        this.getZ()
+                ),
+                EntityType.TEXT_DISPLAY
+        );
+        ((CraftTextDisplay) textDisplay).setText(titleText);
+        Transformation transformation = textDisplay.getTransformation();
+        transformation.getScale().set(scale);
+        textDisplay.setTransformation(transformation);
+
+        textDisplay.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
+        textDisplay.setSeeThrough(true);
+        this.title = ((CraftTextDisplay) textDisplay).getHandle();
+    }
+
+    public void removeTitle() {
+        if (this.title != null) {
+            this.title.remove(RemovalReason.DISCARDED);
+            this.title = null;
         }
     }
 
