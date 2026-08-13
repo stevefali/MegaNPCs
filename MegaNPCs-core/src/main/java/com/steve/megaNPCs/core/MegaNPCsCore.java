@@ -1,6 +1,7 @@
 package com.steve.megaNPCs.core;
 
 import com.steve.MegaNPCs.api.NpcService;
+import com.steve.megaNPCs.core.event.PlayerEvent;
 import com.steve.megaNPCs.core.implementation.NpcServiceImpl;
 import com.steve.megaNPCs.core.network.PacketListenerInjector;
 import com.steve.megaNPCs.core.npc.NpcManager;
@@ -21,6 +22,8 @@ public final class MegaNPCsCore extends JavaPlugin {
                 NpcService.class, serviceImpl, this, ServicePriority.Normal
         );
 
+        getServer().getPluginManager().registerEvents(new PlayerEvent(this), this);
+
         NpcSkinDataAccess.load(this);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -39,14 +42,7 @@ public final class MegaNPCsCore extends JavaPlugin {
 
         NpcManager.unregisterAllNpcs();
 
-        try {
-
-        } catch (Exception e) {
-            System.out.println("Error removing NPCs: " + e.getMessage());
-        }
-
         Bukkit.getServicesManager().unregisterAll(this);
-
 
     }
 }
