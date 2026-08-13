@@ -7,6 +7,7 @@ import com.steve.megaNPCs.core.npc.NPC;
 import com.steve.megaNPCs.core.npc.NpcManager;
 import com.steve.megaNPCs.core.npc.NpcSkin;
 import com.steve.megaNPCs.core.npc.NpcSkinDataAccess;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.*;
@@ -65,7 +66,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public int createNpc(Location location, String displayName, @Nullable String skinName, @Nullable Consumer<Player> onInteract) {
+    public UUID createNpc(Location location, String displayName, @Nullable String skinName, @Nullable Consumer<Player> onInteract) {
         GameProfile profile = new GameProfile(createUniqueUUID(), displayName);
 
         MinecraftServer minecraftServer = ((CraftServer) Bukkit.getServer()).getServer();
@@ -101,11 +102,11 @@ public class NpcServiceImpl implements NpcService {
         }
         NpcManager.registerNpc(npc);
 
-        return npc.getId();
+        return npc.getUUID();
     }
 
     @Override
-    public void setNpcPosition(int npcId, double x, double y, double z) {
+    public void setNpcPosition(UUID npcId, double x, double y, double z) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting NPC position: NPC is null");
@@ -124,7 +125,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void setNpcRotation(int npcId, float xRot, float yRot, float yHeadRot) {
+    public void setNpcRotation(UUID npcId, float xRot, float yRot, float yHeadRot) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting NPC rotation: NPC is null");
@@ -145,7 +146,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void npcLookAt(int npcId, Location location) {
+    public void npcLookAt(UUID npcId, Location location) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting NPC rotation: NPC is null");
@@ -162,7 +163,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void npcEquipItem(int npcId, EquipmentSlot equipmentSlot, Material item) {
+    public void npcEquipItem(UUID npcId, EquipmentSlot equipmentSlot, Material item) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error equipping item to NPC: NPC is null");
@@ -177,7 +178,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void npcUnequipItem(int npcId, EquipmentSlot equipmentSlot) {
+    public void npcUnequipItem(UUID npcId, EquipmentSlot equipmentSlot) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error removing item from NPC: NPC is null");
@@ -190,7 +191,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void showNpcTo(int npcId, Player viewer) {
+    public void showNpcTo(UUID npcId, Player viewer) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error sending packets to show NPC: NPC is null");
@@ -204,30 +205,31 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void unShowNpcsTo(Player viewer, int... npcIds) {
+    public void unShowNpcsTo(Player viewer, UUID... npcIds) {
         if (viewer == null) {
             System.err.println("Error sending packets to un-show NPC: viewing player is null");
             return;
         }
         ServerGamePacketListenerImpl connection = ((CraftPlayer) viewer).getHandle().connection;
-        connection.send(new ClientboundRemoveEntitiesPacket(npcIds));
-        for (int npcid : npcIds) {
+        int[] intIds = Arrays.stream(npcIds).mapToInt(uuid -> NpcManager.getById(uuid).getId()).toArray();
+        connection.send(new ClientboundRemoveEntitiesPacket(intIds));
+        for (UUID npcid : npcIds) {
             NpcManager.getById(npcid).shownToPlayers.remove(viewer.getUniqueId());
         }
     }
 
     @Override
-    public int getNpcId(String npcName) {
+    public UUID getNpcId(String npcName) {
         NPC npc = NpcManager.getByNpcName(npcName);
         if (npc == null) {
             System.err.println("Error retrieving NPC ID: NPC is null");
-            return 0;
+            return null;
         }
-        return npc.getId();
+        return npc.getUUID();
     }
 
     @Override
-    public String getNpcName(int npcId) {
+    public String getNpcName(UUID npcId) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error getting NPC name: NPC is null");
@@ -237,12 +239,12 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public List<Integer> getNpcsInWorld(String worldName) {
+    public List<UUID> getNpcsInWorld(String worldName) {
         return NpcManager.getNpcsByWorld(worldName);
     }
 
     @Override
-    public boolean removeNpc(int npcId) {
+    public boolean removeNpc(UUID npcId) {
         NpcManager.unregisterNpc(npcId);
         NPC npc = NpcManager.getById(npcId);
         return (npc == null);
@@ -254,7 +256,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void setNpcInteraction(int npcId, Consumer<Player> onInteract) {
+    public void setNpcInteraction(UUID npcId, Consumer<Player> onInteract) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting interaction for NPC: NPC is null");
@@ -307,7 +309,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void setDefaultNameVisible(int npcId, boolean isVisible) {
+    public void setDefaultNameVisible(UUID npcId, boolean isVisible) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting customName visibility: NPC is null");
@@ -323,7 +325,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void setNameLines(int npcId, String... nameLines) {
+    public void setNameLines(UUID npcId, String... nameLines) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting NPC name lines: NPC is null");
@@ -347,7 +349,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void removeNameLines(int npcId) {
+    public void removeNameLines(UUID npcId) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error removing lines: NPC is null");
@@ -357,7 +359,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public String[] getCurrentNameLines(int npcId) {
+    public String[] getCurrentNameLines(UUID npcId) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error getting name lines: NPC is null");
@@ -367,7 +369,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void setTitle(int npcId, String titleText, double scale) {
+    public void setTitle(UUID npcId, String titleText, double scale) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error setting title: NPC is null");
@@ -377,7 +379,7 @@ public class NpcServiceImpl implements NpcService {
     }
 
     @Override
-    public void removeTitle(int npcId) {
+    public void removeTitle(UUID npcId) {
         NPC npc = NpcManager.getById(npcId);
         if (npc == null) {
             System.err.println("Error removing title: NPC is null");

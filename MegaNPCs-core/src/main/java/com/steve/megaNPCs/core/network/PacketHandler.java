@@ -48,7 +48,7 @@ public class PacketHandler extends ChannelDuplexHandler {
 
         if (msg instanceof ServerboundInteractPacket packet) {
             int id = (int) ID_FIELD.get(packet);
-            NPC npc = NpcManager.getById(id);
+            NPC npc = NpcManager.getByIntId(id, player.getWorld());
             if (npc != null) {
                 long now = System.currentTimeMillis();
                 if (now - lastCallTime >= COOLDOWN_MILLIS) {

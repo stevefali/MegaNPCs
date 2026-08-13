@@ -7,6 +7,7 @@ import org.bukkit.inventory.EquipmentSlot;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface NpcService {
@@ -21,7 +22,7 @@ public interface NpcService {
      *                    **Note: Interacting with the NPC also fires an {@link com.steve.MegaNPCs.api.NpcInteractionEvent} event. If that event is cancelled, the {@code onInteract} callback method will NOT run.**
      * @return The ID of the newly created NPC.
      */
-    int createNpc(Location location, String displayName, @Nullable String skinName, @Nullable Consumer<Player> onInteract);
+    UUID createNpc(Location location, String displayName, @Nullable String skinName, @Nullable Consumer<Player> onInteract);
 
     /**
      * Set/update the position of the NPC in the world
@@ -31,7 +32,7 @@ public interface NpcService {
      * @param y     The Y-position of the NPC
      * @param z     The Z-position of the NPC
      */
-    void setNpcPosition(int npcId, double x, double y, double z);
+    void setNpcPosition(UUID npcId, double x, double y, double z);
 
     /**
      * Set/update the head and body rotation of the NPC.
@@ -41,7 +42,7 @@ public interface NpcService {
      * @param yRot     The rotation of the NPC's body.
      * @param yHeadRot The horizontal rotation of the NPC's head.
      */
-    void setNpcRotation(int npcId, float xRot, float yRot, float yHeadRot);
+    void setNpcRotation(UUID npcId, float xRot, float yRot, float yHeadRot);
 
     /**
      * Set the NPC to look at the given location.
@@ -51,7 +52,7 @@ public interface NpcService {
      * @param npcId          The id of the NPC.
      * @param playerLocation The location where the NPC will look (as if there were a player standing there)
      */
-    void npcLookAt(int npcId, Location playerLocation);
+    void npcLookAt(UUID npcId, Location playerLocation);
 
     /**
      * Set the equipment slots (armor, items in hand, etc.) of the NPC.
@@ -60,7 +61,7 @@ public interface NpcService {
      * @param equipmentSlot Where on the NPC to equip the item.
      * @param item          The item to equip.
      */
-    void npcEquipItem(int npcId, EquipmentSlot equipmentSlot, Material item);
+    void npcEquipItem(UUID npcId, EquipmentSlot equipmentSlot, Material item);
 
     /**
      * Remove an equipped item (armor, items in hand, etc.) from the NPC
@@ -68,7 +69,7 @@ public interface NpcService {
      * @param npcId         The id of the NPC.
      * @param equipmentSlot Where on the NPC to remove the item.
      */
-    void npcUnequipItem(int npcId, EquipmentSlot equipmentSlot);
+    void npcUnequipItem(UUID npcId, EquipmentSlot equipmentSlot);
 
     /**
      * Show an NPC to a player.
@@ -76,7 +77,7 @@ public interface NpcService {
      * @param npcId  The id of the NPC.
      * @param viewer The player the NPC will be shown to.
      */
-    void showNpcTo(int npcId, Player viewer);
+    void showNpcTo(UUID npcId, Player viewer);
 
     /**
      * Make NPCs disappear for a player. **Note that this does not remove the NPCs from the {@code NpcManager}.**
@@ -84,7 +85,7 @@ public interface NpcService {
      * @param viewer The player for whom the NPCs will disappear.
      * @param npcIds The IDs of the NPCs.
      */
-    void unShowNpcsTo(Player viewer, int... npcIds);
+    void unShowNpcsTo(Player viewer, UUID... npcIds);
 
     /**
      * Get the ID of the NPC with the provided name.
@@ -92,7 +93,7 @@ public interface NpcService {
      * @param npcName The internal name of the NPC. (Note: {@code npcName = displayName + "_" + worldName})
      * @return The NPC's internal name.
      */
-    int getNpcId(String npcName);
+    UUID getNpcId(String npcName);
 
     /**
      * Get the internal name of the NPC with the provided ID.
@@ -100,7 +101,7 @@ public interface NpcService {
      * @param npcId The id of the NPC.
      * @return The NPC's ID.
      */
-    String getNpcName(int npcId);
+    String getNpcName(UUID npcId);
 
     /**
      * Get a list of ID's of all the NPC's in the provided world.
@@ -108,7 +109,7 @@ public interface NpcService {
      * @param worldName The name of the world that the NPC's are in.
      * @return A list of NPC ID's.
      */
-    List<Integer> getNpcsInWorld(String worldName);
+    List<UUID> getNpcsInWorld(String worldName);
 
     /**
      * Remove the NPC and no longer show it to any players.
@@ -116,7 +117,7 @@ public interface NpcService {
      * @param npcId The id of the NPC.
      * @return {@code true} if the NPC was successfully removed, {@code false} if the NPC was not successfully removed.
      */
-    boolean removeNpc(int npcId);
+    boolean removeNpc(UUID npcId);
 
     /**
      * Remove all the NPC's in the provided world.
@@ -135,7 +136,7 @@ public interface NpcService {
      *                   <p>
      *                   Example format of callback method: {@code player -> { player.sendMessage("Hey there!") }}
      */
-    void setNpcInteraction(int npcId, Consumer<Player> onInteract);
+    void setNpcInteraction(UUID npcId, Consumer<Player> onInteract);
 
     /**
      * Remove all registered NPC's. They will also be un-shown to any online players.
@@ -148,7 +149,7 @@ public interface NpcService {
      * @param npcId     The id of the NPC
      * @param isVisible {@code true} to show the name; {@code false} to hide the name.
      */
-    void setDefaultNameVisible(int npcId, boolean isVisible);
+    void setDefaultNameVisible(UUID npcId, boolean isVisible);
 
     /**
      * Set the lines of text displayed above the NPC.
@@ -156,14 +157,14 @@ public interface NpcService {
      * @param npcId     The id of the NPC
      * @param nameLines One or more strings to display above the NPC (from lowest to highest)
      */
-    void setNameLines(int npcId, String... nameLines);
+    void setNameLines(UUID npcId, String... nameLines);
 
     /**
      * Remove the lines of text displayed above the NPC.
      *
      * @param npcId The id of the NPC
      */
-    void removeNameLines(int npcId);
+    void removeNameLines(UUID npcId);
 
     /**
      * Get the lines of text displayed above the NPC.
@@ -171,7 +172,7 @@ public interface NpcService {
      * @param npcId The id of the NPC
      * @return An array of the current name line strings
      */
-    String[] getCurrentNameLines(int npcId);
+    String[] getCurrentNameLines(UUID npcId);
 
     /**
      * Set a scalable title text for the NPC. The title can be multiline ('\n').
@@ -181,13 +182,13 @@ public interface NpcService {
      * @param titleText The text to be displayed. Can be multiline using '\n'
      * @param scale     The scale of the text.
      */
-    void setTitle(int npcId, String titleText, double scale);
+    void setTitle(UUID npcId, String titleText, double scale);
 
     /**
      * Remove the title text of the NPC.
      *
      * @param npcId The id of the NPC
      */
-    void removeTitle(int npcId);
+    void removeTitle(UUID npcId);
 
 }

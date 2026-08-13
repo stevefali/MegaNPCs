@@ -56,7 +56,7 @@ public class NPC extends ServerPlayer {
     }
 
     public void interact(Player player) {
-        NpcInteractionEvent event = new NpcInteractionEvent(this.getId(), npcName, player);
+        NpcInteractionEvent event = new NpcInteractionEvent(this.getUUID(), npcName, player);
         Bukkit.getPluginManager().callEvent(event);
 
         if (!event.isCancelled() && onInteract != null) {
@@ -165,7 +165,7 @@ public class NPC extends ServerPlayer {
         textDisplay.setTransformation(transformation);
 
         textDisplay.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
-        textDisplay.setSeeThrough(true);
+//        textDisplay.setSeeThrough(true);
         this.title = ((CraftTextDisplay) textDisplay).getHandle();
     }
 

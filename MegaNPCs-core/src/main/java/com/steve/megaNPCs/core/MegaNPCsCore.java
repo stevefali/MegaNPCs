@@ -4,6 +4,7 @@ import com.steve.MegaNPCs.api.NpcService;
 import com.steve.megaNPCs.core.implementation.NpcServiceImpl;
 import com.steve.megaNPCs.core.network.PacketListenerInjector;
 import com.steve.megaNPCs.core.npc.NpcManager;
+import com.steve.megaNPCs.core.npc.NpcSkinDataAccess;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -20,6 +21,7 @@ public final class MegaNPCsCore extends JavaPlugin {
                 NpcService.class, serviceImpl, this, ServicePriority.Normal
         );
 
+        NpcSkinDataAccess.load(this);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             PacketListenerInjector.inject(player, this);
