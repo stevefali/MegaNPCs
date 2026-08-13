@@ -16,7 +16,7 @@ public class PlayerEvent implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         PacketListenerInjector.inject(event.getPlayer(), plugin);
     }

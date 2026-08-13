@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public interface NpcService {
 
     /**
-     * Create a new NPC. Once created, the NPC can be shown to players using {@link #showNpcTo(int, Player)}.
+     * Create a new NPC. Once created, the NPC can be shown to players using {@link #showNpcTo(UUID, Player)}.
      *
      * @param location    The NPC's location.
      * @param displayName The name that will be displayed above the NPC's head.
@@ -140,6 +140,7 @@ public interface NpcService {
 
     /**
      * Remove all registered NPC's. They will also be un-shown to any online players.
+     *  ***Use this with CAUTION! This will remove the NPC's from all worlds on the server!***
      */
     void removeAllNpcs();
 

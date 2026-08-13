@@ -1,6 +1,7 @@
 package com.steve.megaNPCs.core.network;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerCommonPacketListenerImpl;
@@ -47,6 +48,12 @@ public class PacketListenerInjector {
             });
         }
 
+    }
+
+    public static boolean isListenerInjected(Player player) {
+        String handlerName = "packet_listener_" + player.getUniqueId();
+        ChannelPipeline pipeline = getChannel(player).pipeline();
+        return pipeline.get(handlerName) != null;
     }
 
 
