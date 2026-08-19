@@ -182,7 +182,9 @@ public class NPC extends ServerPlayer {
         List<Entity> bukkitEntities = this.nameLineArmorStands.stream().map(
                 net.minecraft.world.entity.Entity::getBukkitEntity
         ).collect(Collectors.toList());
-        bukkitEntities.add(this.title.getBukkitEntity());
+        if (this.title != null) {
+            bukkitEntities.add(this.title.getBukkitEntity());
+        }
         return bukkitEntities;
     }
 
