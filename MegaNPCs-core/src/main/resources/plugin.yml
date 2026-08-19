@@ -2,3 +2,11 @@ name: MegaNPCs-core
 version: '${version}'
 main: com.steve.megaNPCs.core.MegaNPCsCore
 api-version: '1.21'
+permissions:
+  meganpcs.admin:
+    description: Admin permission
+    default: op
+commands:
+  cleanupOrphans:
+    description: Remove orphaned TextDisplays and named ArmorStands from the current world
+    permission: meganpcs.admin

@@ -2,13 +2,11 @@ package com.steve.megaNPCs.core.npc;
 
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 
 public class NpcManager {

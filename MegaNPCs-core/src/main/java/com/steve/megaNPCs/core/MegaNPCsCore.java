@@ -1,6 +1,8 @@
 package com.steve.megaNPCs.core;
 
 import com.steve.MegaNPCs.api.NpcService;
+import com.steve.megaNPCs.core.command.CleanupOrphansCommand;
+import com.steve.megaNPCs.core.event.ArmorStandNamingEvent;
 import com.steve.megaNPCs.core.event.PlayerEvent;
 import com.steve.megaNPCs.core.implementation.NpcServiceImpl;
 import com.steve.megaNPCs.core.network.PacketListenerInjector;
@@ -25,13 +27,17 @@ public final class MegaNPCsCore extends JavaPlugin {
                 NpcService.class, serviceImpl, this, ServicePriority.Normal
         );
 
-        getServer().getPluginManager().registerEvents(new PlayerEvent(this), this);
-
         NpcSkinDataAccess.load(this);
+
+        getServer().getPluginManager().registerEvents(new PlayerEvent(this), this);
+        getServer().getPluginManager().registerEvents(new ArmorStandNamingEvent(), this);
+
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             PacketListenerInjector.inject(player, this);
         }
+
+        getCommand("cleanupOrphans").setExecutor(new CleanupOrphansCommand(this));
 
 //        scheduleListenerCheck(this);
     }

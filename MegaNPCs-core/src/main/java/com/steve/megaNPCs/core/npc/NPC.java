@@ -18,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.entity.CraftTextDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -26,6 +27,7 @@ import org.bukkit.util.Transformation;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class NPC extends ServerPlayer {
 
@@ -174,6 +176,14 @@ public class NPC extends ServerPlayer {
             this.title.remove(RemovalReason.DISCARDED);
             this.title = null;
         }
+    }
+
+    public List<Entity> getDisplayEntities() {
+        List<Entity> bukkitEntities = this.nameLineArmorStands.stream().map(
+                net.minecraft.world.entity.Entity::getBukkitEntity
+        ).collect(Collectors.toList());
+        bukkitEntities.add(this.title.getBukkitEntity());
+        return bukkitEntities;
     }
 
 }

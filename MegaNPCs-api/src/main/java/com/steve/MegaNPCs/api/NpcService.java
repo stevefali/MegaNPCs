@@ -2,6 +2,7 @@ package com.steve.MegaNPCs.api;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 
@@ -191,5 +192,23 @@ public interface NpcService {
      * @param npcId The id of the NPC
      */
     void removeTitle(UUID npcId);
+
+    /**
+     * Get all orphaned TextDisplays and ArmorStands in the given world.
+     * ArmorStands are only included if {@code armorStand.getCustomName() != null}, to avoid
+     * removing player-added armorStands.
+     *
+     * @param worldName The name of the world
+     */
+    List<Entity> getOrphansInWorld(String worldName);
+
+    /**
+     * Remove all orphaned TextDisplays and named ArmorStands in the given world.
+     * ArmorStands are only removed if {@code armorStand.getCustomName() != null}, to avoid
+     * removing player-added armorStands.
+     *
+     * @param worldName The name of the world
+     */
+    void removeOrphansFromWorld(String worldName);
 
 }
