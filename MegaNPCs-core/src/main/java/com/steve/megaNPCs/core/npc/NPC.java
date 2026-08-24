@@ -18,7 +18,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.entity.CraftTextDisplay;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -27,7 +26,6 @@ import org.bukkit.util.Transformation;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class NPC extends ServerPlayer {
 
@@ -36,8 +34,8 @@ public class NPC extends ServerPlayer {
     private final List<Pair<EquipmentSlot, ItemStack>> equipmentList = new ArrayList<>();
     public final List<UUID> shownToPlayers = new ArrayList<>();
     public float trueHeadYRot = 0;
-    private final List<ArmorStand> nameLineArmorStands = new ArrayList<>();
-    private Display.TextDisplay title;
+    private final List<UUID> nameLineArmorStands = new ArrayList<>();
+    private UUID titleUuid;
 
     public NPC(
             MinecraftServer server,
@@ -97,7 +95,10 @@ public class NPC extends ServerPlayer {
         double d1 = target.y - vec3.y;
         double d2 = target.z - vec3.z;
         double squareRoot = Math.sqrt(d * d + d2 * d2);
-        this.setXRot(Mth.wrapDegrees((float) (-(Mth.atan2(d1, squareRoot) * (double) 180.0F / (double) (float) Math.PI))));
+        this.setXRot(Mth.wrapDegrees((float) (-(Mth.atan2(
+                d1,
+                squareRoot
+        ) * (double) 180.0F / (double) (float) Math.PI))));
         this.setYRot(Mth.wrapDegrees((float) (Mth.atan2(d2, d) * (double) 180.0F / (double) (float) Math.PI) - 90.0F));
         this.trueHeadYRot = this.getYRot();
         this.setYHeadRot(trueHeadYRot);
@@ -106,7 +107,8 @@ public class NPC extends ServerPlayer {
     }
 
     public void removeNameLineArmorStands() {
-        for (ArmorStand armorStand : nameLineArmorStands) {
+        for (UUID armorStandId : nameLineArmorStands) {
+            ArmorStand armorStand = getArmorStandFromId(armorStandId);
             if (armorStand != null) {
                 armorStand.remove(RemovalReason.DISCARDED);
             }
@@ -115,42 +117,43 @@ public class NPC extends ServerPlayer {
     }
 
     public void addNameLineArmorStand(ArmorStand armorStand) {
-        this.nameLineArmorStands.add(armorStand);
+        this.nameLineArmorStands.add(armorStand.getUUID());
     }
 
     public String[] getCurrentNameLinesText() {
-        return nameLineArmorStands.stream().map(stand ->
-                stand.getCustomName().getString()).toArray(String[]::new);
+        return nameLineArmorStands.stream().map(standId ->
+                getArmorStandFromId(standId).getCustomName().getString()).toArray(String[]::new);
 
     }
 
     public void updateNameLineArmorStandsLocation() {
         Vec3 npcPos = new Vec3(this.getX(), this.getY() - 0.2, this.getZ());
         for (int i = 0; i < nameLineArmorStands.size(); i++) {
-            nameLineArmorStands.get(i).setPos(
-                    npcPos.x(),
-                    npcPos.y() + (i * 0.3),
-                    npcPos.z()
-            );
+            ArmorStand armorStand = getArmorStandFromId(nameLineArmorStands.get(i));
+            if (armorStand != null) {
+                armorStand.setPos(
+                        npcPos.x(),
+                        npcPos.y() + (i * 0.3),
+                        npcPos.z()
+                );
+            }
         }
     }
 
     public void updateTitleLocation() {
-        if (this.title == null) {
+        if (this.titleUuid == null) {
             return;
         }
         Vec3 pos = new Vec3(
                 this.getX(),
                 this.getY() - 0.2 + 2 + ((nameLineArmorStands.size() + 1) * 0.3),
-                this.getZ());
-        this.title.setPos(pos);
+                this.getZ()
+        );
+        getTextDisplayFromId(this.titleUuid).setPos(pos);
     }
 
     public void setTitle(String titleText, double scale) {
-        if (this.title != null) {
-            this.title.remove(RemovalReason.DISCARDED);
-            this.title = null;
-        }
+        removeTitle();
         World world = this.getBukkitEntity().getWorld();
         TextDisplay textDisplay = (TextDisplay) world.spawnEntity(
                 new Location(
@@ -168,24 +171,33 @@ public class NPC extends ServerPlayer {
 
         textDisplay.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
 //        textDisplay.setSeeThrough(true);
-        this.title = ((CraftTextDisplay) textDisplay).getHandle();
+        this.titleUuid = textDisplay.getUniqueId();
     }
 
     public void removeTitle() {
-        if (this.title != null) {
-            this.title.remove(RemovalReason.DISCARDED);
-            this.title = null;
+        if (this.titleUuid != null) {
+            Display.TextDisplay title = getTextDisplayFromId(this.titleUuid);
+            if (title != null) {
+                title.remove(RemovalReason.DISCARDED);
+            }
+            this.titleUuid = null;
         }
     }
 
-    public List<Entity> getDisplayEntities() {
-        List<Entity> bukkitEntities = this.nameLineArmorStands.stream().map(
-                net.minecraft.world.entity.Entity::getBukkitEntity
-        ).collect(Collectors.toList());
-        if (this.title != null) {
-            bukkitEntities.add(this.title.getBukkitEntity());
+    private ArmorStand getArmorStandFromId(UUID uuid) {
+        return (ArmorStand) this.serverLevel().getEntity(uuid);
+    }
+
+    private Display.TextDisplay getTextDisplayFromId(UUID uuid) {
+        return (Display.TextDisplay) this.serverLevel().getEntity(uuid);
+    }
+
+    public List<UUID> getDisplayEntities() {
+        List<UUID> displayEntities = new ArrayList<>(this.nameLineArmorStands);
+        if (titleUuid != null) {
+            displayEntities.add(titleUuid);
         }
-        return bukkitEntities;
+        return displayEntities;
     }
 
 }

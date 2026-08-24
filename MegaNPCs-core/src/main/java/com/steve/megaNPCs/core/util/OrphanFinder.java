@@ -6,7 +6,6 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +22,7 @@ public class OrphanFinder {
 
         List<Entity> worldOrphans = new ArrayList<>();
 
-        List<Entity> worldRegisteredNpcDisplays = new ArrayList<>();
+        List<UUID> worldRegisteredNpcDisplays = new ArrayList<>();
         if (NpcManager.getNpcsByWorld(worldName) != null) {
             for (UUID uuid : NpcManager.getNpcsByWorld(worldName)) {
                 worldRegisteredNpcDisplays.addAll(NpcManager.getById(uuid).getDisplayEntities());
@@ -32,11 +31,11 @@ public class OrphanFinder {
 
         List<Entity> worldDisplays = Bukkit.getWorld(worldName).getEntities()
                 .stream().filter(entity -> ((entity.getType() == EntityType.ARMOR_STAND && entity.getCustomName() != null)
-                         || entity.getType() == EntityType.TEXT_DISPLAY
-                 )).toList();
+                        || entity.getType() == EntityType.TEXT_DISPLAY
+                )).toList();
 
         for (Entity display : worldDisplays) {
-            if (!worldRegisteredNpcDisplays.contains(display)) {
+            if (!worldRegisteredNpcDisplays.contains(display.getUniqueId())) {
                 worldOrphans.add(display);
             }
         }
