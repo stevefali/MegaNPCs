@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class NpcSkinDataAccess {
     private static final String NPC_SKIN_FILE_PATH = "../npc-skins.json";
+    private static final Gson GSON = new Gson();
 
     public static Map<String, NpcSkin> NPC_SKINS = null;
 
@@ -26,7 +27,6 @@ public class NpcSkinDataAccess {
         }
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            Gson gson = new Gson();
             File file = new File(NPC_SKIN_FILE_PATH);
             if (!file.exists()) {
                 future.complete(new HashMap<>());
@@ -35,7 +35,7 @@ public class NpcSkinDataAccess {
             try (FileReader fileReader = new FileReader(file)) {
                 Type type = new TypeToken<Map<String, NpcSkin>>() {
                 }.getType();
-                Map<String, NpcSkin> result = gson.fromJson(fileReader, type);
+                Map<String, NpcSkin> result = GSON.fromJson(fileReader, type);
                 if (result != null) {
                     future.complete(result);
                     NPC_SKINS = result;
