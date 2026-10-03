@@ -97,13 +97,16 @@ public class NpcManager {
     }
 
     public static NPC getByIntId(int npcIntId, World world) {
-       List<UUID> worldUuids = npcIdsByWorld.get(world.getName());
-       for (UUID uuid : worldUuids) {
-           if (npcsById.get(uuid).getId() == npcIntId) {
-               return npcsById.get(uuid);
-           }
-       }
-       return null;
+        List<UUID> worldUuids = npcIdsByWorld.get(world.getName());
+        if (worldUuids == null) {
+            return null;
+        }
+        for (UUID uuid : worldUuids) {
+            if (npcsById.get(uuid).getId() == npcIntId) {
+                return npcsById.get(uuid);
+            }
+        }
+        return null;
     }
 
 }
