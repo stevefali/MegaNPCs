@@ -1,10 +1,12 @@
 package com.steve.megaNPCs.core.util;
 
+import com.steve.megaNPCs.core.MegaNPCsCore;
 import com.steve.megaNPCs.core.npc.NpcManager;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ public class OrphanFinder {
 
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            System.err.println("Error: world " + worldName + " is null");
+            JavaPlugin.getPlugin(MegaNPCsCore.class).getLogger().warning("Error: world " + worldName + " is null");
             return List.of();
         }
 
